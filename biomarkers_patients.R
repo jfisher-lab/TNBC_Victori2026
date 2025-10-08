@@ -1,8 +1,7 @@
 library(tidyverse)
 library(magrittr)
 library(conflicted)
-library(BMATools)
-library(tidybox)
+library(NANSEN)
 conflicts_prefer(dplyr::filter)
 
 excluded = read_csv("../tnbcLeap/experiments/exclusions_mono.csv") %>%
@@ -11,7 +10,7 @@ excluded = read_csv("../tnbcLeap/experiments/exclusions_mono.csv") %>%
 
 clinical = read_csv("../patient_data/clin_retro_data.csv")
 
-path = "../patient_data/simulations/results/cnvmut_v2.3_030924/"
+path = "../patient_data/simulations/results/cnvmut"
 
 patient_regex = "LEAP-\\d{3}"
 
@@ -19,9 +18,9 @@ data = list.dirs(path = path,recursive=FALSE) %>%
   map(\(x) parse_biocheck_dir(x,
                               get_netw_variables("../tnbcLeap/tnbcLeap.json"))) %>%
   list_rbind() %T>%
-  write_csv("../patient_data/simulations/results/parsed_cnvmut_v2.3_030924.csv")
+  write_csv("../patient_data/simulations/results/parsed_cnvmut.csv")
 
-proc = read_csv("../patient_data/simulations/results/parsed_cnvmut_v2.3_030924.csv") %>%
+proc = read_csv("../patient_data/simulations/results/parsed_cnvmut.csv") %>%
   filter(time == max(time), .by = filename)%>%
   rowwise() %>%
   mutate(mean = mean(c(lo, hi))) %>%
@@ -36,7 +35,7 @@ proc = read_csv("../patient_data/simulations/results/parsed_cnvmut_v2.3_030924.c
   mutate(across(name:sim_treatment, as_factor)) %>%
   rename(node = "name")
 
-prediction = readRDS("../patient_data/simulations/results/cnvmut_v2.3_030924.rds")$filtered_arms_data %>%
+prediction = readRDS("../patient_data/simulations/results/cnvmut.rds")$filtered_arms_data %>%
   select(phenotype, background, diff, pcr) %>%
   pivot_wider(names_from = phenotype, values_from = diff) %>%
   mutate(prediction = CellDeath >= 2 & Proliferation <= -1)
@@ -53,9 +52,9 @@ by_response = proc %>%
   filter(! node %in% c("CellDeath", "Proliferation")) %>%
   left_join(prediction, by = join_by(leap_id == background)) %>%
   rename(patient = "leap_id") %T>%
-  write_csv("../patient_data/simulations/results/node_activity_by_response_cnvmut_v2.3_030924.csv")
+  write_csv("../patient_data/simulations/results/node_activity_by_response_cnvmut.csv")
 
-by_response = read_csv("../patient_data/simulations/results/node_activity_by_response_cnvmut_v2.3_030924.csv")
+by_response = read_csv("../patient_data/simulations/results/node_activity_by_response_cnvmut.csv")
 
 # filter correct predictions
 by_response_good = by_response %>%
@@ -75,6 +74,4 @@ corr = by_response_good %>%
   #                   pearson = ~ cor.test(activation_diff, .x)$estimate))) %>%
   ungroup() #%>%
   filter(pvalue <= 0.05) %T>%
-  write_csv("../patient_data/simulations/results/corr_biomarkers_cnvmut_v2.3_030924.csv")
-
-# TODO need to do separate drug pairs and olaparib, otherwise it seems like there is no significant correlation
+  write_csv("../patient_data/simulations/results/corr_biomarkers_cnvmut.csv")

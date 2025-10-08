@@ -2,14 +2,13 @@ library(tidyverse)
 library(readxl)
 library(viridis)
 library(patchwork)
-library(tidybox)
 library(ggpubr)
 library(ggvenn)
 library(magrittr)
 library(khroma)
 conflicted::conflicts_prefer(dplyr::filter)
 
-path = "D:/OneDrive - University College London/kui/comparisons_rna-seq_mar24/"
+path = "../comparisons_rna-seq_mar24/"
 
 network_nodes = read_csv("../tnbcLeap/model_gene_list.csv")
 dict = read_csv("../tnbcLeap/model_node_dict.csv")
@@ -85,7 +84,7 @@ filtered_imc = read_csv(imc_path)
 
 # Patient DE
 # todo analyse
-patient_de = read_xlsx("D:/OneDrive - University College London/kui/Patient_Cancer_DEs_20240726.xlsx")
+patient_de = read_xlsx("../Patient_Cancer_DEs_20240726.xlsx")
 
 #for v1 we used corr_biomarkers_powerset.csv
 
@@ -115,7 +114,6 @@ shared = bind_rows(filtered_rna %>%
          node = str_replace(node, "_", "\n"),
          node = str_replace(node, "BAKBAX", "BAK/BAX")) %>%
   inner_join(corr_sign) %>%
-  #filter(node %in% corr_biomarkers$node) %>%
   mutate(node = fct(node, levels = sort(unique(node)))) %>%
   mutate(comparison = case_match(comparison,
                                  "Retro_CancerCell_NonResponderGroup_Pre_vs_Post" ~
@@ -143,16 +141,6 @@ shared = bind_rows(filtered_rna %>%
   filter(abs_logFC > 0.5 | comparison == "IMC CR vs. NR pre", # IMC avg_logFC not big enough
          (avg_logFC * pearson > 0 & comparison != "NR Pre vs. Post") | # are they the same sign
            (avg_logFC * pearson < 0 & comparison == "NR Pre vs. Post"))
-
-
-
-# !(node == "BAK/BAX" & comparison == "NR Pre vs. Post"),
-# !(node == "BRCA1" & comparison == "CR cancer vs. \nnon-cancer cells"),
-# !(node == "CDC25A" & comparison == "CR cancer vs. \nnon-cancer cells"),
-# !(node == "p21" & (comparison == "CR cancer vs. \nnon-cancer cells") |
-#     comparison == "NR Pre vs. Post"),
-# !(node == "RAD51" & (comparison == "CR cancer vs. \nnon-cancer cells") |
-#     comparison == "NR Pre vs. Post"))
 
 # horizontal biomarker plot
 p_bio = ggplot(shared, aes(x = avg_logFC, y = comparison)) +
@@ -225,7 +213,7 @@ ggsave("../patient_data/simulations/results/plots/biomarker_comparison_vert.png"
        height = 22, width = 12)
 
 ## venn ----
-venn_corr = read_csv("../patient_data/steven_nov23/results/corr_biomarkers.csv") %>%
+venn_corr = read_csv("../patient_data/biomarkers/results/corr_biomarkers.csv") %>%
   left_join(dict) %>%
   pull(gene) %>%
   unique()
@@ -240,18 +228,18 @@ venn_bio_filtered = filtered_biomarkers %>%
 
 venn_list = list(scRNAseq = unique(venn_bio$gene), model = unique(venn_corr))
 ggvenn(venn_list, c("scRNAseq", "model"))
-ggsave("../patient_data/steven_nov23/results/plots/venn_all_vs_predicted.png")
+ggsave("../patient_data/biomarkers/results/plots/venn_all_vs_predicted.png")
 
 venn_list = list(scRNAseq = unique(venn_bio_filtered$gene), model = unique(venn_corr))
 ggvenn(venn_list, c("scRNAseq", "model"))
-ggsave("../patient_data/steven_nov23/results/plots/venn_present_vs_predicted.png")
+ggsave("../patient_data/biomarkers/results/plots/venn_present_vs_predicted.png")
 
 venn_list = list(scRNAseq = unique(venn_bio$gene), model = unique(network_nodes$name))
 ggvenn(venn_list, c("scRNAseq", "model"))
-ggsave("../patient_data/steven_nov23/results/plots/venn_all_vs_present.png")
+ggsave("../patient_data/biomarkers/results/plots/venn_all_vs_present.png")
 
 ## lists ----
-model_biom = read_csv("../patient_data/steven_nov23/results/corr_biomarkers.csv") %>%
+model_biom = read_csv("../patient_data/biomarkers/results/corr_biomarkers.csv") %>%
   mutate(predicted_biomarker = TRUE) %>%
   full_join(dict) %>%
   replace_na(list(predicted_biomarker = FALSE)) %>%

@@ -93,7 +93,7 @@ comb_background = all_perts %>%
 
 # generate networks
 comb_background = read_csv("F:/patient_simulations/all_combinations_backgrounds.csv")
-network_path = "C:/Users/fisherdesktop2/Documents/Pedro/tnbcLeap/tnbcLeap.json"
+network_path = "../tnbcLeap/tnbcLeap.json"
 bma_path = 'C:\\"Program Files (x86)"\\BMA\\BioCheckConsole.exe'
 
 cnv_to_networks(comb_background, network_path, bma_path,
@@ -109,10 +109,7 @@ check_cnv_network = Vectorize(function(id, subdir){
 cnv_ids = comb_background %>%
   distinct(id) %>%
   mutate(subdir = as.character(floor(id/1000))) %>%
-  #mutate(created = check_cnv_network(id, subdir))
   write_csv("F:/patient_simulations/cnv_ids.csv")
-
-#all(cnv_ids$created)
 
 ## computationally expensive tasks ----
 cnv_ids = read_csv("F:/patient_simulations/cnv_ids.csv")
@@ -140,7 +137,7 @@ foreach(cuSubdir = unique(cnv_ids$subdir),
 
 # merge results
 registerDoParallel(14)
-foreach(cuSubdir = unique(cnv_ids$subdir), #12.03
+foreach(cuSubdir = unique(cnv_ids$subdir),
         .packages = c('dplyr', 'purrr', 'readr')) %dopar% {
           subdir_path = paste0("F:/patient_simulations/powerset_results/", cuSubdir, "/")
           list.files(path = subdir_path,

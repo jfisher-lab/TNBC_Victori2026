@@ -1,17 +1,5 @@
-# TODO
-# 4. Annotate deleterious mutations
-#
-# For each gene in network:
-#
-#   Count deleterious mutations where delet_sift is true
-#
-# If multiple mutations exist for the same gene:
-#
-#   Sum the count of deleterious mutations
-
 # data loading and cleaning ----
 library(tidyverse)
-library(tidybox)
 library(magrittr)
 library(TCGAretriever)
 conflicted::conflicts_prefer(dplyr::filter)
@@ -23,7 +11,6 @@ library(contsurvplot)
 library(interactions)
 library(jtools)
 
-# from Matthew
 surv_custom_theme <- function() {
   theme_survminer() %+replace%
     theme(
@@ -50,7 +37,6 @@ brca_tcga_studies = get_cancer_studies() %>%
 
 # from there we want to look at the study with id brca_tcga_pan_can_atlas_2018,
 # which is the same I downloaded above.
-# But later check if we can use any other
 study_id = "brca_tcga_pan_can_atlas_2018"
 
 brca_profiles = get_genetic_profiles(study_id)
@@ -146,8 +132,7 @@ length(unique(clinical_relevant$patient_id))
 
 
 # Stratify by RNA biomarkers ----
-#rna_biomarkers = read_csv("../patient_data/simulations/results/corr_biomarkers_powerset.csv") %>%
-rna_biomarkers = read_csv("F:/OneDrive - University College London/patient_data/simulations/results/corr_biomarkers_powerset.csv") %>%
+rna_biomarkers = read_csv("../patient_data/simulations/results/corr_biomarkers_powerset.csv") %>%
   filter(sim_treatment != "olaparib") %>%
   select(node, pearson) %>%
   distinct() %>%
@@ -161,44 +146,39 @@ rna_biomarkers = read_csv("F:/OneDrive - University College London/patient_data/
 
 # survival curves
 clinical_selection = clinical_relevant
-#for(clinical_selection in clinical_sets){
-  clinical_tag = names(keep(clinical_sets, ~ identical(.x, clinical_selection)))
+clinical_tag = names(keep(clinical_sets, ~ identical(.x, clinical_selection)))
 
-   stratification_rna = rna %>%
-    filter(abs(mrna) >= 1) %>%
-    inner_join(rna_biomarkers, relationship = "many-to-many") %>%
-    # filter good results
-    filter((mrna * pearson) > 0) %>%  # positive if same sign
-    select(patient_id) %>%
-    group_by(patient_id) %>%
-    mutate(n_good = n()) %>%
-    ungroup() %>%
-    right_join(clinical_selection, relationship = "many-to-many") %>%
-    select(patient_id, n_good, dfs_months, dfs_status, os_months, os_status) %>%
-    distinct() %>%
-    mutate(n_good = ifelse(is.na(n_good), 0, n_good),
-           predicted_response = ifelse(n_good > median(n_good), "good", "bad"),
-           predicted_response = factor(predicted_response,
-                                       levels = c("good", "bad")))
+stratification_rna = rna %>%
+  filter(abs(mrna) >= 1) %>%
+  inner_join(rna_biomarkers, relationship = "many-to-many") %>%
+  # filter good results
+  filter((mrna * pearson) > 0) %>%  # positive if same sign
+  select(patient_id) %>%
+  group_by(patient_id) %>%
+  mutate(n_good = n()) %>%
+  ungroup() %>%
+  right_join(clinical_selection, relationship = "many-to-many") %>%
+  select(patient_id, n_good, dfs_months, dfs_status, os_months, os_status) %>%
+  distinct() %>%
+  mutate(n_good = ifelse(is.na(n_good), 0, n_good),
+         predicted_response = ifelse(n_good > median(n_good), "good", "bad"),
+         predicted_response = factor(predicted_response,
+                                     levels = c("good", "bad")))
 
 
-  survcurve = survfit(Surv(os_months) ~ predicted_response, data = stratification_rna)
+survcurve = survfit(Surv(os_months) ~ predicted_response, data = stratification_rna)
 
-  #png(filename = paste0("../patient_data/other_datasets/tcga_2018/plots/rna_tcga_surcurve_",
-  #                      clinical_tag, ".png"), width = 500, height = 650)
-  print(ggsurvplot(survcurve,
-             pval = TRUE,
-             risk.table = TRUE,
-             risk.table.height = 0.15,
-             surv.scale = "percent",
-             ggtheme = surv_custom_theme(),
-             title = "RNA",
-             palette = c("#00B6ED","#E40087"),
-             xlab = "Overall survival time (months)",
-             legend.labs = c("Complete response", "No response"),
-             legend.title = ""))
-  #dev.off()
-#}
+print(ggsurvplot(survcurve,
+                 pval = TRUE,
+                 risk.table = TRUE,
+                 risk.table.height = 0.15,
+                 surv.scale = "percent",
+                 ggtheme = surv_custom_theme(),
+                 title = "RNA",
+                 palette = c("#00B6ED","#E40087"),
+                 xlab = "Overall survival time (months)",
+                 legend.labs = c("Complete response", "No response"),
+                 legend.title = ""))
 
 # Stratify by mutations that resensitise patients to treatment ----
 resensitising_muts = read_csv(
@@ -214,7 +194,7 @@ resensitising_muts = read_csv(
 # survival curves
 for(clinical_selection in clinical_sets){
   clinical_tag = names(keep(clinical_sets, ~ identical(.x, clinical_selection)))
-
+  
   stratification_muts = resensitising_muts %>%
     inner_join(mutations) %>%
     select(gene, patient_id) %>%
@@ -229,9 +209,9 @@ for(clinical_selection in clinical_sets){
            n_muts = ifelse(is.na(n_muts), 0, n_muts),
            predicted_response = factor(predicted_response,
                                        levels = c("good", "bad")))
-
+  
   survcurve = survfit(Surv(os_months) ~ predicted_response, data = stratification_muts)
-
+  
   png(filename = paste0("../patient_data/other_datasets/tcga_2018/plots/mut_tcga_survcurve_",
                         clinical_tag, ".png"), width = 500, height = 650)
   print(ggsurvplot(survcurve,

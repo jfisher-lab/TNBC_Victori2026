@@ -1,6 +1,5 @@
 library(tidyverse)
 library(magrittr)
-library(tidybox)
 library(patchwork)
 library(ggpubr)
 library(viridis)
@@ -18,7 +17,6 @@ label = "Inhibition"
 #tag = "KI"
 #label = "Activation"
 
-#dir = "../screens/2024-09-09_mono_results_wholearms_cnvmuts_v2.3/"
 dir = "../screens/2024-06-14_mono_results_whole_arms_cnvmuts/"
 
 excluded_genes = c("Unrepaired_teDSB", "sBRCAmut", "sBRCAcnv", "RepairNHEJ_teDSB",
@@ -28,7 +26,7 @@ excluded_genes = c("Unrepaired_teDSB", "sBRCAmut", "sBRCAcnv", "RepairNHEJ_teDSB
                    "Epirubicin", "DNAreplicated", "Cyclophosphamide",
                    "CTL_killing", "CTL_activity", "BRCAmut", "ATMi")
 
-patient_list_v1 = c("LEAP-008",
+patient_list = c("LEAP-008",
                     "LEAP-010",
                     "LEAP-014",
                     "LEAP-016",
