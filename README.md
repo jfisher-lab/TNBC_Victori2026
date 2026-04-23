@@ -1,4 +1,4 @@
-# TNBC_Victori2025
+# Victori et al. 2026
 - Figure 2: `heatmaps_main.R`
 - Figures 4 and 6: `tcga_analysis.R`
 - Figure 5: `transcriptomics_integration.R`
