@@ -1,4 +1,4 @@
-# Victori et al. 2026
+# Victori et al. 2026, Cell Reports Medicine
 - Figure 2: `heatmaps_main.R`
 - Figures 4 and 6: `tcga_analysis.R`
 - Figure 5: `transcriptomics_integration.R`
